@@ -48,6 +48,10 @@ TRANSLATIONS = {
         'back': 'BACK',
         'calculate': 'CALCULATE MY PROBABILITY',
         'start_over': 'START OVER',
+        'confirm_restart_title': 'Confirm Restart',
+        'confirm_restart_msg': 'Are you sure you want to start over? All your answers will be lost.',
+        'yes': 'Yes',
+        'no': 'No',
         
         # Step 1
         'step1_title': 'Tell Us About Yourself',
@@ -61,9 +65,10 @@ TRANSLATIONS = {
         
         # Step 2
         'step2_title': 'Your Physical Health',
-        'step2_help': 'These measurements help us understand your overall physical health. BMI is calculated from your height and weight. You can find BMI calculators online or ask your doctor.',
-        'weight_label': 'What is your weight (in pounds)?',
-        'bmi_label': 'What is your Body Mass Index (BMI)?',
+        'step2_help': 'These measurements help us understand your overall physical health. BMI will be calculated automatically from your height and weight.',
+        'weight_label': 'What is your weight (in kg)?',
+        'height_label': 'What is your height (in cm)?',
+        'bmi_calculated': 'Your Body Mass Index (BMI)',
         'gen_health_label': 'How would you rate your general health?',
         'checkup_label': 'When was your last medical checkup?',
         
@@ -201,6 +206,10 @@ TRANSLATIONS = {
         'back': 'KEMBALI',
         'calculate': 'KIRA KEBARANGKALIAN SAYA',
         'start_over': 'MULA SEMULA',
+        'confirm_restart_title': 'Sahkan Mula Semula',
+        'confirm_restart_msg': 'Adakah anda pasti mahu mula semula? Semua jawapan anda akan hilang.',
+        'yes': 'Ya',
+        'no': 'Tidak',
         
         # Step 1
         'step1_title': 'Beritahu Kami Tentang Diri Anda',
@@ -214,9 +223,10 @@ TRANSLATIONS = {
         
         # Step 2
         'step2_title': 'Kesihatan Fizikal Anda',
-        'step2_help': 'Pengukuran ini membantu kami memahami kesihatan fizikal keseluruhan anda. BMI dikira daripada ketinggian dan berat badan anda. Anda boleh cari kalkulator BMI dalam talian atau tanya doktor anda.',
-        'weight_label': 'Berapakah berat badan anda (dalam paun)?',
-        'bmi_label': 'Berapakah Indeks Jisim Badan (BMI) anda?',
+        'step2_help': 'Pengukuran ini membantu kami memahami kesihatan fizikal keseluruhan anda. BMI akan dikira secara automatik daripada ketinggian dan berat badan anda.',
+        'weight_label': 'Berapakah berat badan anda (dalam kg)?',
+        'height_label': 'Berapakah ketinggian anda (dalam cm)?',
+        'bmi_calculated': 'Indeks Jisim Badan (BMI) Anda',
         'gen_health_label': 'Bagaimanakah anda menilai kesihatan am anda?',
         'checkup_label': 'Bilakah pemeriksaan perubatan terakhir anda?',
         
@@ -389,28 +399,42 @@ if 'show_help' not in st.session_state:
     st.session_state.show_help = {}
 if 'language' not in st.session_state:
     st.session_state.language = 'en'  # 'en' for English, 'ms' for Malay
+if 'font_size' not in st.session_state:
+    st.session_state.font_size = 20  # Default font size
+if 'show_confirmation' not in st.session_state:
+    st.session_state.show_confirmation = False
+if 'screen_reader_mode' not in st.session_state:
+    st.session_state.screen_reader_mode = False
+if 'show_keyboard_shortcuts' not in st.session_state:
+    st.session_state.show_keyboard_shortcuts = False
 
 # ============================================================================
 # CUSTOM CSS FOR ELDERLY-FRIENDLY UI
 # ============================================================================
 
-st.markdown("""
+# Dynamic font size CSS based on user preference
+font_size = st.session_state.get('font_size', 20)
+heading_multiplier = 2.4  # 48px at default 20px
+section_multiplier = 1.6  # 32px at default 20px
+label_multiplier = 1.1  # 22px at default 20px
+
+st.markdown(f"""
 <style>
-    /* Base font size - larger for elderly users (WCAG AAA) */
-    html, body, [class*="css"] {
-        font-size: 20px !important;
+    /* Base font size - adjustable for elderly users (WCAG AAA) */
+    html, body, [class*="css"] {{
+        font-size: {font_size}px !important;
         line-height: 1.6 !important;
-    }
+    }}
     
     /* Main container - centered with max width for readability */
-    .main .block-container {
+    .main .block-container {{
         max-width: 900px;
         padding: 2rem 1.5rem;
-    }
+    }}
     
     /* Main title styling - High contrast */
-    .main-title {
-        font-size: 48px !important;
+    .main-title {{
+        font-size: {font_size * heading_multiplier}px !important;
         font-weight: bold !important;
         color: #000000 !important;
         text-align: center;
@@ -420,19 +444,19 @@ st.markdown("""
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;
-    }
+    }}
     
     /* Section headers - High contrast (7:1 ratio) */
-    .section-header {
-        font-size: 32px !important;
+    .section-header {{
+        font-size: {font_size * section_multiplier}px !important;
         font-weight: bold !important;
         border-bottom: 4px solid #667eea;
         padding-bottom: 15px;
         margin: 40px 0 25px 0;
-    }
+    }}
     
     /* Step indicator - Clear progress tracking */
-    .step-indicator {
+    .step-indicator {{
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         border-radius: 60px;
         padding: 20px 40px;
@@ -442,55 +466,79 @@ st.markdown("""
         color: white;
         margin-bottom: 30px;
         box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-    }
+    }}
     
     /* Large readable labels with high contrast */
-    .stSelectbox label, .stSlider label, .stRadio label, .stNumberInput label {
-        font-size: 22px !important;
+    .stSelectbox label, .stSlider label, .stRadio label, .stNumberInput label {{
+        font-size: {font_size * label_multiplier}px !important;
         font-weight: 700 !important;
         line-height: 1.5 !important;
         margin-bottom: 10px !important;
-    }
+    }}
     
     /* Larger buttons - Minimum 44x44px touch target */
-    .stButton > button {
-        font-size: 20px !important;
-        font-weight: bold !important;
-        padding: 18px 25px !important;
-        border-radius: 20px !important;
+    .stButton {{
+        width: 100% !important;
+    }}
+    
+    .stButton > button {{
+        font-size: {max(font_size - 4, 14)}px !important;
+        font-weight: 600 !important;
+        padding: 15px 20px !important;
+        border-radius: 12px !important;
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
         color: white !important;
         border: 3px solid #5a67d8 !important;
-        width: 100%;
-        margin: 25px 0;
-        min-height: 70px;
+        width: 100% !important;
+        margin: 10px 0 !important;
+        min-height: 56px !important;
+        height: auto !important;
+        box-sizing: border-box !important;
+        overflow: visible !important;
+        overflow-wrap: break-word !important;
         box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         transition: all 0.3s ease;
-        overflow: hidden !important;
-        text-overflow: ellipsis !important;
-    }
+        white-space: normal !important;
+        word-wrap: break-word !important;
+        line-height: 1.4 !important;
+        display: block !important;
+        text-align: center !important;
+    }}
     
-    .stButton > button p {
+    /* Button text content - target all possible inner elements */
+    .stButton > button > div,
+    .stButton > button > div > p,
+    .stButton > button > p,
+    .stButton > button > span,
+    .stButton > button div,
+    .stButton > button p,
+    .stButton > button span {{
         white-space: normal !important;
         word-wrap: break-word !important;
         overflow-wrap: break-word !important;
+        word-break: break-word !important;
+        hyphens: auto !important;
         text-align: center !important;
         margin: 0 !important;
-        line-height: 1.3 !important;
-    }
+        padding: 0 !important;
+        line-height: 1.4 !important;
+        max-width: 100% !important;
+        width: 100% !important;
+        display: block !important;
+    }}
     
-    .stButton > button:hover {
+    .stButton > button:hover {{
         background: linear-gradient(135deg, #5a67d8 0%, #6b46a0 100%) !important;
-        transform: scale(1.03);
+        transform: scale(1.02);
         box-shadow: 0 6px 12px rgba(0,0,0,0.15);
-    }
+    }}
     
-    .stButton > button:active {
+    .stButton > button:active {{
         transform: scale(0.98);
-    }
+    }}
     
     /* Probability result boxes - Dark mode compatible */
-    .prob-low {
+    .prob-low {{
         background-color: color-mix(in srgb, #22C55E 15%, transparent);
         border: 5px solid #22C55E;
         border-radius: 25px;
@@ -498,9 +546,9 @@ st.markdown("""
         text-align: center;
         margin: 25px 0;
         box-shadow: 0 6px 12px rgba(0,0,0,0.1);
-    }
+    }}
     
-    .prob-medium {
+    .prob-medium {{
         background-color: color-mix(in srgb, #EAB308 15%, transparent);
         border: 5px solid #EAB308;
         border-radius: 25px;
@@ -508,9 +556,9 @@ st.markdown("""
         text-align: center;
         margin: 25px 0;
         box-shadow: 0 6px 12px rgba(0,0,0,0.1);
-    }
+    }}
     
-    .prob-high {
+    .prob-high {{
         background-color: color-mix(in srgb, #EF4444 15%, transparent);
         border: 5px solid #EF4444;
         border-radius: 25px;
@@ -518,21 +566,21 @@ st.markdown("""
         text-align: center;
         margin: 25px 0;
         box-shadow: 0 6px 12px rgba(0,0,0,0.1);
-    }
+    }}
     
-    .prob-text {
+    .prob-text {{
         font-size: 42px !important;
         font-weight: bold !important;
-    }
+    }}
     
-    .probability-text {
+    .probability-text {{
         font-size: 28px !important;
         margin-top: 20px;
         font-weight: 600;
-    }
+    }}
     
     /* Info boxes - High contrast with clear borders - Dark mode compatible */
-    .info-box {
+    .info-box {{
         background-color: color-mix(in srgb, var(--primary-color, #667eea) 15%, transparent);
         border: 3px solid var(--primary-color, #667eea);
         border-left: 8px solid var(--primary-color, #667eea);
@@ -542,9 +590,9 @@ st.markdown("""
         font-size: 20px;
         line-height: 1.8;
         box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-    }
+    }}
     
-    .help-box {
+    .help-box {{
         background-color: color-mix(in srgb, #DD6B20 10%, transparent);
         border: 3px solid #DD6B20;
         border-left: 8px solid #DD6B20;
@@ -553,10 +601,10 @@ st.markdown("""
         border-radius: 12px;
         font-size: 18px;
         line-height: 1.7;
-    }
+    }}
     
     /* Action plan cards - Dark mode compatible */
-    .action-card {
+    .action-card {{
         background-color: color-mix(in srgb, #3B82F6 12%, transparent);
         border: 3px solid #3B82F6;
         border-radius: 18px;
@@ -564,14 +612,14 @@ st.markdown("""
         margin: 15px 0;
         box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         line-height: 1.7;
-    }
+    }}
     
-    .action-card .action-highlight {
+    .action-card .action-highlight {{
         color: #60A5FA !important;
-    }
+    }}
     
     /* Explanation cards with better spacing - Dark mode compatible */
-    .explanation-card {
+    .explanation-card {{
         background-color: color-mix(in srgb, currentColor 8%, transparent);
         border: 3px solid color-mix(in srgb, currentColor 30%, transparent);
         border-radius: 18px;
@@ -579,102 +627,136 @@ st.markdown("""
         margin: 15px 0;
         box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         line-height: 1.7;
-    }
+    }}
     
     /* SHAP factor cards - Dark mode compatible */
-    .factor-card-positive {
+    .factor-card-positive {{
         background-color: color-mix(in srgb, #FC8181 12%, transparent);
         border: 3px solid #FC8181;
         border-left: 6px solid #FC8181;
         border-radius: 15px;
         padding: 25px;
         margin: 15px 0;
-    }
+    }}
     
-    .factor-card-negative {
+    .factor-card-negative {{
         background-color: color-mix(in srgb, #68D391 12%, transparent);
         border: 3px solid #68D391;
         border-left: 6px solid #68D391;
         border-radius: 15px;
         padding: 25px;
         margin: 15px 0;
-    }
+    }}
     
     /* Radio buttons - Larger touch targets - Dark mode compatible */
-    .stRadio > div {
+    .stRadio > div {{
         gap: 20px !important;
-    }
+    }}
     
-    .stRadio > div > label {
+    .stRadio > div > label {{
         padding: 15px 25px !important;
         font-size: 20px !important;
         border: 2px solid rgba(128, 128, 128, 0.3) !important;
         border-radius: 12px !important;
         min-width: 120px;
         text-align: center;
-    }
+    }}
     
-    .stRadio > div > label:hover {
+    .stRadio > div > label:hover {{
         border-color: #667eea !important;
-    }
+    }}
     
     /* Language toggle button */
     [data-testid="stButton"][key="lang_toggle"] button,
-    button[kind="secondary"] {
+    button[kind="secondary"] {{
         white-space: nowrap !important;
         min-width: 100px !important;
         padding: 15px 20px !important;
         font-size: 18px !important;
-    }
+    }}
     
     /* Progress bar */
-    .progress-bar {
+    .progress-bar {{
         width: 100%;
         height: 12px;
         background-color: #E2E8F0;
         border-radius: 10px;
         overflow: hidden;
         margin: 20px 0;
-    }
+    }}
     
-    .progress-fill {
+    .progress-fill {{
         height: 100%;
         background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
         transition: width 0.3s ease;
-    }
+    }}
     
     /* Success/Warning/Error messages - High contrast */
-    .stSuccess, .stWarning, .stError, .stInfo {
+    .stSuccess, .stWarning, .stError, .stInfo {{
         font-size: 19px !important;
         padding: 20px !important;
         border-radius: 12px !important;
         line-height: 1.7 !important;
-    }
+    }}
     
     /* Footer - Dark mode compatible */
-    .footer {
+    .footer {{
         text-align: center;
         opacity: 0.7;
         font-size: 16px;
         padding: 40px 0;
         border-top: 2px solid color-mix(in srgb, currentColor 20%, transparent);
         margin-top: 60px;
-    }
+    }}
     
     /* Accessibility: Focus indicators */
-    *:focus {
+    *:focus {{
         outline: 3px solid #4299E1 !important;
         outline-offset: 2px !important;
-    }
+    }}
     
     /* Reduce motion for users who prefer it */
-    @media (prefers-reduced-motion: reduce) {
-        * {
+    @media (prefers-reduced-motion: reduce) {{
+        * {{
             animation-duration: 0.01ms !important;
             animation-iteration-count: 1 !important;
             transition-duration: 0.01ms !important;
-        }
-    }
+        }}
+    }}
+    
+    /* Keyboard navigation indicators */
+    .keyboard-hint {{
+        background-color: color-mix(in srgb, #4299E1 15%, transparent);
+        border: 2px solid #4299E1;
+        border-radius: 8px;
+        padding: 10px 15px;
+        font-size: {font_size * 0.85}px;
+        margin: 10px 0;
+        display: inline-block;
+    }}
+    
+    /* Screen reader only text */
+    .sr-only {{
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0,0,0,0);
+        white-space: nowrap;
+        border-width: 0;
+    }}
+    
+    /* Confirmation dialog */
+    .confirmation-dialog {{
+        background-color: color-mix(in srgb, #FFA500 20%, transparent);
+        border: 4px solid #FFA500;
+        border-radius: 20px;
+        padding: 30px;
+        margin: 20px 0;
+        box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+    }}
 </style>
 """, unsafe_allow_html=True)
 
@@ -700,26 +782,138 @@ def show_progress_bar(current_step, total_steps=5):
     """Display a progress bar showing current step."""
     progress = (current_step / total_steps) * 100
     st.markdown(f"""
-    <div class="step-indicator">
+    <div class="step-indicator" role="status" aria-live="polite">
+        <span class="sr-only">Progress: Step {current_step} of {total_steps}</span>
         📍 {t('step')} {current_step} {t('of')} {total_steps}
     </div>
-    <div class="progress-bar">
+    <div class="progress-bar" role="progressbar" aria-valuenow="{progress}" aria-valuemin="0" aria-valuemax="100" aria-label="Assessment progress">
         <div class="progress-fill" style="width: {progress}%;"></div>
     </div>
     """, unsafe_allow_html=True)
 
 def show_help_button(help_text, key):
     """Display a help button with tooltip."""
-    if st.button(f"❓ {t('need_help')}", key=f"help_{key}"):
+    if st.button(f"❓ {t('need_help')}", key=f"help_{key}", help="Press H for help"):
         st.session_state.show_help[key] = not st.session_state.show_help.get(key, False)
     
     if st.session_state.show_help.get(key, False):
         st.markdown(f"""
-        <div class="help-box">
+        <div class="help-box" role="complementary" aria-label="Help information">
             <strong>ℹ️ {t('help_info')}</strong><br><br>
             {help_text}
         </div>
         """, unsafe_allow_html=True)
+
+def show_keyboard_shortcuts():
+    """Display keyboard shortcuts guide."""
+    if st.session_state.show_keyboard_shortcuts:
+        lang = st.session_state.language
+        shortcuts_en = """
+        ⌨️ **Keyboard Shortcuts:**
+        - **Alt + N** or **→**: Next step
+        - **Alt + B** or **←**: Previous step  
+        - **Alt + H**: Toggle help
+        - **Alt + R**: Restart assessment
+        - **Tab**: Navigate between fields
+        - **Space/Enter**: Select options
+        """
+        shortcuts_ms = """
+        ⌨️ **Pintasan Papan Kekunci:**
+        - **Alt + N** atau **→**: Langkah seterusnya
+        - **Alt + B** atau **←**: Langkah sebelumnya
+        - **Alt + H**: Togol bantuan
+        - **Alt + R**: Mula semula penilaian
+        - **Tab**: Navigasi antara medan
+        - **Space/Enter**: Pilih pilihan
+        """
+        st.info(shortcuts_en if lang == 'en' else shortcuts_ms)
+
+def inject_keyboard_handler():
+    """Inject JavaScript to handle keyboard shortcuts."""
+    import streamlit.components.v1 as components
+    
+    keyboard_js = """
+    <script>
+    (function() {
+        // Remove existing listener if it exists
+        if (window.keyboardHandlerAttached) {
+            document.removeEventListener('keydown', window.handleKeyboard);
+        }
+        
+        function findAndClickButton(textPatterns) {
+            const buttons = parent.document.querySelectorAll('button');
+            for (let btn of buttons) {
+                const text = btn.innerText.toUpperCase();
+                for (let pattern of textPatterns) {
+                    if (text.includes(pattern.toUpperCase())) {
+                        btn.click();
+                        btn.focus();
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+        
+        window.handleKeyboard = function(e) {
+            // Only trigger with Alt key combinations (not arrow keys alone to avoid conflicts)
+            if (!e.altKey) return;
+            
+            // Alt + N: Next
+            if (e.altKey && e.key.toLowerCase() === 'n') {
+                e.preventDefault();
+                e.stopPropagation();
+                findAndClickButton(['NEXT', 'SETERUSNYA', 'CALCULATE', 'KIRA']);
+            }
+            // Alt + B: Back
+            else if (e.altKey && e.key.toLowerCase() === 'b') {
+                e.preventDefault();
+                e.stopPropagation();
+                findAndClickButton(['BACK', 'KEMBALI']);
+            }
+            // Alt + H: Toggle Help
+            else if (e.altKey && e.key.toLowerCase() === 'h') {
+                e.preventDefault();
+                e.stopPropagation();
+                findAndClickButton(['Need Help', 'Perlukan Bantuan']);
+            }
+            // Alt + R: Restart
+            else if (e.altKey && e.key.toLowerCase() === 'r') {
+                e.preventDefault();
+                e.stopPropagation();
+                findAndClickButton(['START OVER', 'MULA SEMULA']);
+            }
+        };
+        
+        // Attach to parent document (Streamlit's main document)
+        parent.document.addEventListener('keydown', window.handleKeyboard);
+        window.keyboardHandlerAttached = true;
+    })();
+    </script>
+    """
+    
+    components.html(keyboard_js, height=0)
+
+def confirm_action(action_key, title, message, on_confirm):
+    """Show confirmation dialog for critical actions."""
+    st.markdown(f"""
+    <div class="confirmation-dialog" role="alertdialog" aria-labelledby="confirm-title" aria-describedby="confirm-desc">
+        <h3 id="confirm-title" style="margin-top: 0;">⚠️ {title}</h3>
+        <p id="confirm-desc" style="font-size: {st.session_state.font_size}px;">{message}</p>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    col1, col2 = st.columns(2)
+    confirmed = False
+    with col1:
+        if st.button(f"✅ {t('yes')}", key=f"{action_key}_yes", use_container_width=True):
+            confirmed = True
+            on_confirm()
+    with col2:
+        if st.button(f"❌ {t('no')}", key=f"{action_key}_no", use_container_width=True):
+            st.session_state.show_confirmation = False
+            st.rerun()
+    return confirmed
 
 def get_probability_level(probability):
     """Categorize likelihood level based on probability."""
@@ -795,32 +989,76 @@ def main():
         return
     
     # ========================================================================
-    # HEADER
+    # HEADER WITH ACCESSIBILITY CONTROLS
     # ========================================================================
     
-    # Language toggle button - use wider column for button
-    col_header1, col_header2 = st.columns([5, 1.5])
-    with col_header2:
+    # Accessibility controls row
+    col_font, col_lang, col_shortcuts = st.columns([2, 1.5, 1.5])
+    
+    with col_font:
+        font_size_new = st.slider(
+            "🔤 Text Size / Saiz Teks",
+            min_value=16,
+            max_value=28,
+            value=st.session_state.font_size,
+            step=2,
+            key="font_size_slider",
+            help="Adjust text size for better readability / Laraskan saiz teks untuk kebolehbacaan yang lebih baik"
+        )
+        if font_size_new != st.session_state.font_size:
+            st.session_state.font_size = font_size_new
+            st.rerun()
+    
+    with col_lang:
         lang_icon = "🇲🇾" if st.session_state.language == 'en' else "🇬🇧"
         lang_text = "BM" if st.session_state.language == 'en' else "EN"
-        if st.button(f"{lang_icon} {lang_text}", key="lang_toggle", use_container_width=True):
+        if st.button(f"{lang_icon} {lang_text}", key="lang_toggle", use_container_width=True, help="Switch language / Tukar bahasa"):
             st.session_state.language = 'ms' if st.session_state.language == 'en' else 'en'
             st.rerun()
     
+    with col_shortcuts:
+        if st.button("⌨️ Keys", key="show_shortcuts", use_container_width=True, help="Show keyboard shortcuts / Tunjuk pintasan papan kekunci"):
+            st.session_state.show_keyboard_shortcuts = not st.session_state.show_keyboard_shortcuts
+            st.rerun()
+    
+    # Keyboard shortcuts guide
+    show_keyboard_shortcuts()
+    
+    # Inject keyboard event handler
+    inject_keyboard_handler()
+    
     # Language-specific title
     title = '🩺 Diabetes Probability Assessment Tool' if st.session_state.language == 'en' else '🩺 Alat Penilaian Kebarangkalian Diabetes'
-    st.markdown(f'<h1 class="main-title">{title}</h1>', unsafe_allow_html=True)
+    st.markdown(f'<h1 class="main-title" role="heading" aria-level="1">{title}</h1>', unsafe_allow_html=True)
+    
+    # Screen reader announcement for current section
+    step_names = [
+        "Basic Information / Maklumat Asas",
+        "Physical Health / Kesihatan Fizikal", 
+        "Health Conditions / Keadaan Kesihatan",
+        "Lifestyle Habits / Tabiat Gaya Hidup",
+        "Results / Keputusan"
+    ]
+    if st.session_state.current_step <= 5:
+        st.markdown(f'<div class="sr-only" role="status" aria-live="polite">Current section: {step_names[st.session_state.current_step-1]}</div>', unsafe_allow_html=True)
     
     st.markdown(f"""
-    <div class="info-box">
-        <strong style="font-size: 24px;">{t('welcome_title')}</strong><br><br>
-        <span style="font-size: 20px;">
+    <div class="info-box" role="region" aria-label="Welcome message">
+        <strong style="font-size: {st.session_state.font_size * 1.2}px;">{t('welcome_title')}</strong><br><br>
+        <span style="font-size: {st.session_state.font_size}px;">
         {t('welcome_msg')}<br><br>
         ✅ {t('easy_steps')}<br>
         ✅ {t('clear_results')}<br>
         ✅ {t('understand_factors')}<br>
         ✅ {t('get_recommendations')}
         </span>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Keyboard navigation hint
+    st.markdown(f"""
+    <div class="keyboard-hint" role="note">
+        💡 <strong>Tip:</strong> Use <kbd>Tab</kbd> to navigate, <kbd>Alt+N</kbd> for Next, <kbd>Alt+B</kbd> for Back
     </div>
     """, unsafe_allow_html=True)
     
@@ -835,9 +1073,12 @@ def main():
     
     # STEP 1: Basic Information
     if st.session_state.current_step == 1:
-        st.markdown(f'<h2 class="section-header">{t("step")} 1️⃣: {t("step1_title")}</h2>', unsafe_allow_html=True)
+        st.markdown(f'<h2 class="section-header" role="heading" aria-level="2">{t("step")} 1️⃣: {t("step1_title")}</h2>', unsafe_allow_html=True)
         
         show_help_button(t('step1_help'), "step1")
+        
+        # Screen reader context
+        st.markdown('<span class="sr-only">Step 1 of 5: Please provide your basic demographic information. All fields are required.</span>', unsafe_allow_html=True)
         
         col1, col2 = st.columns(2)
         
@@ -883,36 +1124,50 @@ def main():
             'EMPLOYMENT_STATUS': employment
         })
         
-        if st.button(f"➡️ {t('next')}: {t('step2_title')}", use_container_width=True):
+        if st.button(f"➡️ {t('next')}: {t('step2_title')}", use_container_width=True, help="Press Alt+N or → to continue"):
             st.session_state.current_step = 2
             st.rerun()
     
     # STEP 2: Physical Measurements
     elif st.session_state.current_step == 2:
-        st.markdown(f'<h2 class="section-header">{t("step")} 2️⃣: {t("step2_title")}</h2>', unsafe_allow_html=True)
+        st.markdown(f'<h2 class="section-header" role="heading" aria-level="2">{t("step")} 2️⃣: {t("step2_title")}</h2>', unsafe_allow_html=True)
+        
+        # Screen reader context
+        st.markdown('<span class="sr-only">Step 2 of 5: Please provide your physical health measurements including weight, height, and general health status.</span>', unsafe_allow_html=True)
         
         show_help_button(t('step2_help'), "step2")
         
         col1, col2 = st.columns(2)
         
         with col1:
-            weight = st.number_input(
+            weight_kg = st.number_input(
                 f"⚖️ {t('weight_label')}",
-                min_value=50,
-                max_value=600,
-                value=st.session_state.user_data.get('WGHT (lbs)', 180),
-                step=5,
-                key="weight"
+                min_value=20.0,
+                max_value=300.0,
+                value=st.session_state.user_data.get('weight_kg', 75.0),
+                step=0.5,
+                key="weight_kg"
             )
             
-            bmi = st.slider(
-                f"📊 {t('bmi_label')}",
-                min_value=12.0,
-                max_value=60.0,
-                value=st.session_state.user_data.get('BMI', 25.0),
+            height_cm = st.number_input(
+                f"📏 {t('height_label')}",
+                min_value=100.0,
+                max_value=250.0,
+                value=st.session_state.user_data.get('height_cm', 170.0),
                 step=0.5,
-                key="bmi"
+                key="height_cm"
             )
+            
+            # Calculate BMI from weight (kg) and height (cm)
+            height_m = height_cm / 100.0  # Convert cm to meters
+            bmi = weight_kg / (height_m ** 2)
+            
+            # Display calculated BMI
+            st.markdown(f"""
+            <div class="info-box" style="padding: 15px; margin: 10px 0;">
+                <strong>📊 {t('bmi_calculated')}:</strong> <span style="font-size: 24px; font-weight: bold;">{bmi:.1f}</span>
+            </div>
+            """, unsafe_allow_html=True)
             
             # Calculate BMI category
             if bmi < 18.5:
@@ -923,6 +1178,9 @@ def main():
                 bmi_category = 3  # Overweight
             else:
                 bmi_category = 4  # Obese
+            
+            # Convert weight from kg to pounds for the model (1 kg = 2.20462 lbs)
+            weight_lbs = weight_kg * 2.20462
         
         with col2:
             gen_health = st.selectbox(
@@ -942,7 +1200,9 @@ def main():
             )
         
         st.session_state.user_data.update({
-            'WGHT (lbs)': weight,
+            'weight_kg': weight_kg,
+            'height_cm': height_cm,
+            'WGHT (lbs)': weight_lbs,
             'BMI': bmi,
             'BMI_CATEGORY': bmi_category,
             'GEN_HLTH': gen_health,
@@ -951,17 +1211,20 @@ def main():
         
         col_back, col_next = st.columns(2)
         with col_back:
-            if st.button(f"⬅️ {t('back')}", use_container_width=True):
+            if st.button(f"⬅️ {t('back')}", use_container_width=True, help="Press Alt+B or ← to go back"):
                 st.session_state.current_step = 1
                 st.rerun()
         with col_next:
-            if st.button(f"➡️ {t('next')}: {t('step3_title')}", use_container_width=True):
+            if st.button(f"➡️ {t('next')}: {t('step3_title')}", use_container_width=True, help="Press Alt+N or → to continue"):
                 st.session_state.current_step = 3
                 st.rerun()
     
     # STEP 3: Health Conditions & Medications
     elif st.session_state.current_step == 3:
-        st.markdown(f'<h2 class="section-header">{t("step")} 3️⃣: {t("step3_title")}</h2>', unsafe_allow_html=True)
+        st.markdown(f'<h2 class="section-header" role="heading" aria-level="2">{t("step")} 3️⃣: {t("step3_title")}</h2>', unsafe_allow_html=True)
+        
+        # Screen reader context
+        st.markdown('<span class="sr-only">Step 3 of 5: Please provide information about your current health conditions and medications.</span>', unsafe_allow_html=True)
         
         show_help_button(t('step3_help'), "step3")
         
@@ -997,17 +1260,20 @@ def main():
         
         col_back, col_next = st.columns(2)
         with col_back:
-            if st.button(f"⬅️ {t('back')}", use_container_width=True):
+            if st.button(f"⬅️ {t('back')}", use_container_width=True, help="Press Alt+B or ← to go back"):
                 st.session_state.current_step = 2
                 st.rerun()
         with col_next:
-            if st.button(f"➡️ {t('next')}: {t('step4_title')}", use_container_width=True):
+            if st.button(f"➡️ {t('next')}: {t('step4_title')}", use_container_width=True, help="Press Alt+N or → to continue"):
                 st.session_state.current_step = 4
                 st.rerun()
     
     # STEP 4: Lifestyle Habits
     elif st.session_state.current_step == 4:
-        st.markdown(f'<h2 class="section-header">{t("step")} 4️⃣: {t("step4_title")}</h2>', unsafe_allow_html=True)
+        st.markdown(f'<h2 class="section-header" role="heading" aria-level="2">{t("step")} 4️⃣: {t("step4_title")}</h2>', unsafe_allow_html=True)
+        
+        # Screen reader context
+        st.markdown('<span class="sr-only">Step 4 of 5: Please provide information about your lifestyle habits including exercise and alcohol consumption.</span>', unsafe_allow_html=True)
         
         show_help_button(t('step4_help'), "step4")
         
@@ -1034,17 +1300,20 @@ def main():
         
         col_back, col_next = st.columns(2)
         with col_back:
-            if st.button(f"⬅️ {t('back')}", use_container_width=True):
+            if st.button(f"⬅️ {t('back')}", use_container_width=True, help="Press Alt+B or ← to go back"):
                 st.session_state.current_step = 3
                 st.rerun()
         with col_next:
-            if st.button(f"➡️ {t('calculate')}", use_container_width=True):
+            if st.button(f"➡️ {t('calculate')}", use_container_width=True, help="Press Enter to calculate your results"):
                 st.session_state.current_step = 5
                 st.rerun()
     
     # STEP 5: Results
     elif st.session_state.current_step == 5:
-        st.markdown(f'<h2 class="section-header">📊 {t("results_title")}</h2>', unsafe_allow_html=True)
+        st.markdown(f'<h2 class="section-header" role="heading" aria-level="2">📊 {t("results_title")}</h2>', unsafe_allow_html=True)
+        
+        # Screen reader context
+        st.markdown('<span class="sr-only">Step 5 of 5: Your personalized diabetes risk assessment results and recommendations.</span>', unsafe_allow_html=True)
         
         # Prepare input data
         input_data = st.session_state.user_data.copy()
@@ -1082,14 +1351,15 @@ def main():
             
             # Main result box
             st.markdown(f"""
-            <div class="{prob_class}">
+            <div class="{prob_class}" role="region" aria-label="Diabetes risk assessment result">
                 <div class="prob-text">{prob_emoji} {t('diabetes_likelihood')}: {prob_level}</div>
                 <div class="probability-text">
                     {t('probability_score')}: {probability*100:.1f}%
                 </div>
-                <p style="font-size: 18px; margin-top: 15px;">
+                <p style="font-size: {st.session_state.font_size * 0.9}px; margin-top: 15px;">
                     {t('current_profile')} <strong>{t(level_key.lower())}</strong> {t('likelihood_of')}
                 </p>
+                <span class="sr-only">Your diabetes risk level is {prob_level} with a probability score of {probability*100:.1f} percent.</span>
             </div>
             """, unsafe_allow_html=True)
             
@@ -1301,34 +1571,54 @@ def main():
         col_restart, col_print = st.columns(2)
         
         with col_restart:
-            if st.button(f"🔄 {t('start_over')}", use_container_width=True):
-                # Reset all session state
-                st.session_state.current_step = 1
-                st.session_state.user_data = {}
-                st.rerun()
+            # Show confirmation dialog if requested
+            if st.session_state.get('show_confirmation', False):
+                confirm_action(
+                    'restart',
+                    t('confirm_restart_title'),
+                    t('confirm_restart_msg'),
+                    lambda: restart_assessment()
+                )
+            else:
+                if st.button(f"🔄 {t('start_over')}", use_container_width=True, help="Press Alt+R to restart"):
+                    st.session_state.show_confirmation = True
+                    st.rerun()
         
         with col_print:
             st.markdown(f"""
-            <div style="text-align: center; padding: 20px;">
-                <p style="font-size: 18px;">
+            <div style="text-align: center; padding: 20px;" role="note">
+                <p style="font-size: {st.session_state.font_size * 0.9}px;">
                 💡 <strong>{t('print_tip')}</strong> {t('print_msg')}
                 </p>
             </div>
             """, unsafe_allow_html=True)
-        
+    
+    # Always show footer and disclaimer at the bottom
+    show_footer_and_disclaimer()
+
+def restart_assessment():
+    """Reset all session state to restart assessment."""
+    st.session_state.current_step = 1
+    st.session_state.user_data = {}
+    st.session_state.show_confirmation = False
+    st.rerun()
+
+def show_footer_and_disclaimer():
+    """Display the medical disclaimer and footer."""
     # ========================================================================
     # DISCLAIMER & FOOTER
     # ========================================================================
     st.markdown("---")
     
     # Medical Disclaimer Box
+    font_size = st.session_state.get('font_size', 20)
     st.markdown(f"""
-    <div style="background-color: color-mix(in srgb, #ff5555 10%, var(--background-color)); border: 4px solid #C53030; border-radius: 15px; padding: 30px; margin-top: 40px;">
-        <p style="color: #C53030; font-size: 24px; font-weight: bold; margin: 0 0 20px 0;">⚠️ {t('medical_disclaimer_title')}</p>
-        <p style="font-size: 19px; line-height: 1.8; margin: 0 0 15px 0;">
+    <div style="background-color: color-mix(in srgb, #ff5555 10%, transparent); border: 4px solid #C53030; border-radius: 15px; padding: 30px; margin-top: 40px;" role="alert" aria-label="Medical disclaimer">
+        <p style="color: #C53030; font-size: {font_size * 1.2}px; font-weight: bold; margin: 0 0 20px 0;">⚠️ {t('medical_disclaimer_title')}</p>
+        <p style="font-size: {font_size * 0.95}px; line-height: 1.8; margin: 0 0 15px 0;">
         {t('disclaimer_msg')}
         </p>
-        <ul style="font-size: 19px; line-height: 1.8; margin: 0 0 15px 20px;">
+        <ul style="font-size: {font_size * 0.95}px; line-height: 1.8; margin: 0 0 15px 20px;">
             <li>{t('disclaimer_1')}</li>
             <li>{t('disclaimer_2')}</li>
             <li>{t('disclaimer_3')}</li>

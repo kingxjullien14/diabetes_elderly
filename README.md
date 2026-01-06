@@ -16,6 +16,9 @@ This project implements a comprehensive diabetes prediction system using BRFSS (
 - 🌐 **Bilingual Support**: English and Malay language options
 - 📱 **Responsive Design**: Works on desktop, tablet, and mobile devices
 - ♿ **Accessibility**: WCAG AAA compliant for older adults
+- 🔤 **Adjustable Text Size**: User-controlled font sizing (16-28px)
+- ⌨️ **Keyboard Navigation**: Full keyboard shortcut support
+- 🔊 **Screen Reader Support**: ARIA labels and semantic HTML
 
 ## Project Structure
 
@@ -240,9 +243,18 @@ Each notebook is self-contained but depends on outputs from previous notebooks.
 
 ### Elderly-Friendly Design
 - **Large Fonts**: 18-24px minimum for readability
+- **Adjustable Text Size**: User-controlled slider (16-28px range)
 - **High Contrast**: WCAG AAA compliant (7:1 ratio)
 - **Progressive Disclosure**: One question at a time to reduce cognitive load
 - **Clear Navigation**: Large buttons (44x44px minimum touch targets)
+- **Keyboard Shortcuts**: Full keyboard navigation support
+  - `Alt + N`: Next step
+  - `Alt + B`: Previous step
+  - `Alt + H`: Toggle help
+  - `Alt + R`: Restart assessment
+  - `Tab`: Navigate between fields
+- **Screen Reader Support**: ARIA labels, roles, and semantic HTML
+- **Confirmation Dialogs**: Prevents accidental data loss
 - **Help System**: Contextual tooltips and explanations
 - **Dark Mode Support**: Automatic theme adaptation
 - **Error Prevention**: Input validation and clear guidance
@@ -304,8 +316,9 @@ SHAP and LIME analyses will reveal:
 - Mobile app version (React Native/Flutter)
 - Integration with healthcare provider systems
 - Additional language support
-- Voice input for accessibility
+- Voice input/text-to-speech for accessibility
 - PDF report generation
+- Audio feedback and cues
 
 ## RO3 Compliance Checklist
 
@@ -322,6 +335,10 @@ SHAP and LIME analyses will reveal:
 - ✅ **Application Framework**: Streamlit web application
 - ✅ **User Interface**: Elderly-friendly design (large fonts, high contrast, progressive disclosure)
 - ✅ **Accessibility**: WCAG AAA compliance for older adults
+- ✅ **Adjustable Text Size**: User-controlled font sizing (16-28px slider)
+- ✅ **Keyboard Navigation**: Alt+N/B/H/R shortcuts for all navigation
+- ✅ **Screen Reader Support**: ARIA labels, roles, and sr-only text
+- ✅ **Confirmation Dialogs**: Prevents accidental actions (e.g., restart)
 - ✅ **Multilingual**: English and Malay support
 - ✅ **SHAP Integration**: Top 5 factors displayed with explanations
 - ✅ **Personalized Recommendations**: Actionable health advice based on predictions
@@ -344,10 +361,11 @@ The Streamlit app (`diabetes_app_elderly.py`) uses these essential files:
    - `model_features.csv` - List of 19 required features in correct order
 
 2. **Application Code**
-   - `diabetes_app_elderly.py` - Main Streamlit application (1353 lines)
+   - `diabetes_app_elderly.py` - Main Streamlit application (~1600 lines)
    - Includes bilingual translations (English/Malay)
    - SHAP explanations for top 5 risk factors
    - Personalized recommendations engine
+   - Keyboard shortcuts and accessibility features
 
 3. **Dependencies**
    - `requirements.txt` - Python package versions for deployment
