@@ -1,7 +1,7 @@
 # Diabetes Risk Assessment App for Older Adults
 ## Master's Project - CSP760
 
-🔗 **Live Demo:** [Coming Soon - Deploy on Streamlit Cloud]
+🔗 **Live Demo:** [[Deployed on Streamlit Cloud]](https://diabetes-elderly.streamlit.app/)
 
 ---
 
